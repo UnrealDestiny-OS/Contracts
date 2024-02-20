@@ -42,7 +42,7 @@ contract TrainersERC721 is AccessControl, ERC721Enumerable {
     function tokenURI(
         uint256 _id
     ) public view virtual override returns (string memory) {
-        _requireMinted(_id);
+        _requireOwned(_id);
 
         return
             string(
