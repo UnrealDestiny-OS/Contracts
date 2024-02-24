@@ -10,6 +10,7 @@ abstract contract ITrainersDeployer {
         uint8 tokenBurning;
         uint8 tokenStaking;
         uint8 tokenProject;
+        uint8 tokenRewards;
         uint256 feeMTR;
         uint256 feeToken;
         address burning;
@@ -42,5 +43,5 @@ abstract contract ITrainersDeployer {
 
     function getPaymentValues(
         uint256 _amount
-    ) public view virtual returns (PaymentData memory);
+    ) public pure virtual returns (PaymentData memory);
 }

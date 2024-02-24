@@ -9,15 +9,15 @@ import "./ITrainersDeployer.sol";
 import "./ITrainersERC721.sol";
 
 contract TrainersDeployer is AccessControl, ITrainersDeployer {
-    uint8 public tokenBurning_ = 20;
-    uint8 public tokenStaking_ = 30;
-    uint8 public tokenRewards_ = 30;
-    uint8 public tokenProject_ = 20;
+    uint8 public constant tokenBurning_ = 20;
+    uint8 public constant tokenStaking_ = 30;
+    uint8 public constant tokenRewards_ = 30;
+    uint8 public constant tokenProject_ = 20;
 
-    uint256 public feeMTR_ = 10000000000000000;
-    uint256 public feeThreshold_ = 1000000000000000000;
-    uint256 public feeToken_ = 10000000000000000000000;
-    uint256 public tokenThreshold_ = 100000000000000000000000;
+    uint256 public constant feeMTR_ = 10000000000000000;
+    uint256 public constant feeThreshold_ = 1000000000000000000;
+    uint256 public constant feeToken_ = 10000000000000000000000;
+    uint256 public constant tokenThreshold_ = 100000000000000000000000;
 
     address public burning_ = 0x000000000000000D0e0A0D000000000000000000;
     address public staking_ = address(0);
@@ -63,13 +63,13 @@ contract TrainersDeployer is AccessControl, ITrainersDeployer {
 
     function getPaymentValues(
         uint256 _total
-    ) public view override returns (PaymentData memory) {
+    ) public pure override returns (PaymentData memory) {
         return
             PaymentData(
                 (tokenBurning_ * _total) / 100,
                 (tokenStaking_ * _total) / 100,
-                (tokenRewards_ * _total) / 100,
-                (tokenProject_ * _total) / 100
+                (tokenProject_ * _total) / 100,
+                (tokenRewards_ * _total) / 100
             );
     }
 
@@ -116,6 +116,7 @@ contract TrainersDeployer is AccessControl, ITrainersDeployer {
                 tokenBurning_,
                 tokenStaking_,
                 tokenProject_,
+                tokenRewards_,
                 feeMTR_,
                 feeToken_,
                 burning_,

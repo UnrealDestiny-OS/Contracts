@@ -12,15 +12,17 @@ contract TrainersERC721 is AccessControl, ERC721Enumerable {
     using Strings for uint256;
     using Strings for uint16;
 
-    bytes32 public constant ADMIN = keccak256("ADMIN");
-    bytes32 public constant DEP = keccak256("DEP");
+    bytes32 public constant DEPLOYER = keccak256("DEPLOYER");
 
     string public URI_;
     uint256 public tokenTraker_ = 1;
 
     mapping(uint256 => uint16) private modelTraker_;
 
-    constructor(string memory _name,string memory _symbol) ERC721(_name, _symbol) {
+    constructor(
+        string memory _name,
+        string memory _symbol
+    ) ERC721(_name, _symbol) {
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
@@ -36,16 +38,19 @@ contract TrainersERC721 is AccessControl, ERC721Enumerable {
         return modelTraker_[_id].toString();
     }
 
-    function encodedData(uint256 _id) public view returns(bytes memory) {
-        return abi.encodePacked(_baseURI(),_id.toString(),"?model=",model(_id));
+    function encodedData(uint256 _id) public view returns (bytes memory) {
+        return
+            abi.encodePacked(_baseURI(), _id.toString(), "?model=", model(_id));
     }
 
-    function tokenURI(uint256 _id) public view virtual override returns (string memory) {
+    function tokenURI(
+        uint256 _id
+    ) public view virtual override returns (string memory) {
         _requireMinted(_id);
         return string(encodedData(_id));
     }
 
-    function mint(address _to, uint16 _m) public virtual onlyRole(DEP) {
+    function mint(address _to, uint16 _m) public virtual onlyRole(DEPLOYER) {
         uint256 _tokenId = tokenTraker_;
         modelTraker_[_tokenId] = _m;
         tokenTraker_ += 1;
@@ -53,7 +58,15 @@ contract TrainersERC721 is AccessControl, ERC721Enumerable {
         emit MintTrainer(_m, _tokenId, _to);
     }
 
-    function supportsInterface(bytes4 interfaceId)public view virtual override(AccessControl, ERC721Enumerable) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        virtual
+        override(AccessControl, ERC721Enumerable)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId);
     }
 }
