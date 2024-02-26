@@ -13,6 +13,11 @@ abstract contract ITrainersDeployer {
         uint8 tokenRewards;
         uint256 feeMTR;
         uint256 feeToken;
+        uint256 tokenThreshold;
+        uint256 feeThreshold;
+        uint256 feeBalance;
+        uint256 tokenBalance;
+        address rewards;
         address burning;
         address staking;
         address project;
@@ -28,8 +33,6 @@ abstract contract ITrainersDeployer {
     function setProjectAddress(address _a) public virtual;
 
     function setStakingAddress(address _a) public virtual;
-
-    function setFeeWallet(address _a) public virtual;
 
     function setRewardsWallet(address _a) public virtual;
 

@@ -14,10 +14,10 @@ contract TrainersDeployer is AccessControl, ITrainersDeployer {
     uint8 public constant tokenRewards_ = 30;
     uint8 public constant tokenProject_ = 20;
 
-    uint256 public constant feeMTR_ = 10000000000000000;
-    uint256 public constant feeThreshold_ = 1000000000000000000;
-    uint256 public constant feeToken_ = 10000000000000000000000;
-    uint256 public constant tokenThreshold_ = 100000000000000000000000;
+    uint256 public feeMTR_ = 10000000000000000;
+    uint256 public feeThreshold_ = 1000000000000000000;
+    uint256 public feeToken_ = 10000000000000000000000;
+    uint256 public tokenThreshold_ = 100000000000000000000000;
 
     address public burning_ = 0x000000000000000D0e0A0D000000000000000000;
     address public staking_ = address(0);
@@ -49,16 +49,22 @@ contract TrainersDeployer is AccessControl, ITrainersDeployer {
         staking_ = _a;
     }
 
-    function setFeeWallet(
-        address _a
-    ) public override onlyRole(DEFAULT_ADMIN_ROLE) {
-        feeWallet_ = _a;
-    }
-
     function setRewardsWallet(
         address _a
     ) public override onlyRole(DEFAULT_ADMIN_ROLE) {
         rewards_ = _a;
+    }
+
+    function setValues(
+        uint256 _feeMTR,
+        uint256 _feeThreshold,
+        uint256 _feeToken,
+        uint256 _tokenThreshold
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        feeMTR_ = _feeMTR;
+        feeThreshold_ = _feeThreshold;
+        feeToken_ = _feeToken;
+        tokenThreshold_ = _tokenThreshold;
     }
 
     function getPaymentValues(
@@ -87,7 +93,7 @@ contract TrainersDeployer is AccessControl, ITrainersDeployer {
         }
 
         if (feeBalance >= feeThreshold_) {
-            payable(feeWallet_).transfer(feeBalance);
+            payable(project_).transfer(feeBalance);
             emit SendMTRFee(feeBalance);
         }
     }
@@ -119,6 +125,11 @@ contract TrainersDeployer is AccessControl, ITrainersDeployer {
                 tokenRewards_,
                 feeMTR_,
                 feeToken_,
+                tokenThreshold_,
+                feeThreshold_,
+                address(this).balance,
+                token_.balanceOf(address(this)),
+                rewards_,
                 burning_,
                 staking_,
                 project_
