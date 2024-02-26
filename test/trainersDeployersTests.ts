@@ -18,7 +18,6 @@ describe("Trainers Deployer", function () {
 
     const pTrainersDeployer = trainersDeployer as TrainersDeployer;
 
-    await pTrainersDeployer.setFeeWallet(addr1);
     await pTrainersDeployer.setProjectAddress(addr2);
     await pTrainersDeployer.setStakingAddress(addr3);
     await pTrainersDeployer.setRewardsWallet(addr4);
@@ -59,7 +58,6 @@ describe("Trainers Deployer", function () {
 
       const pTrainersDeployer = trainersDeployer as TrainersDeployer;
 
-      await pTrainersDeployer.setFeeWallet(addr1);
       await pTrainersDeployer.setProjectAddress(addr2);
       await pTrainersDeployer.setStakingAddress(addr3);
       await pTrainersDeployer.setRewardsWallet(addr4);
