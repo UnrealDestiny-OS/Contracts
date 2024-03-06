@@ -28,4 +28,9 @@ export const GenerateDeployementFile = async (generation: { [key: string]: { add
     if (error) console.log(error);
     else console.log("DAAP Deployment generation finished.");
   });
+
+  FS.writeFile("C:\\Users\\sebas\\Documents\\Projects\\UnrealDestiny\\DataAPI\\src\\data\\deployment.json", parsedData, "utf-8", (error) => {
+    if (error) console.log(error);
+    else console.log("DAAP Deployment generation on the backend finished.");
+  });
 };
