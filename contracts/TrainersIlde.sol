@@ -8,10 +8,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract TrainersIDLE is AccessControl {
-    event Join(address, uint256, uint256);
-    event CollectIDLEPoints(address, uint256, uint256);
-    event CollectTransactionPoints(address, uint256, uint256);
-    event BuyImprovement(address, uint256, uint256);
+    event Join(uint256, uint256);
+    event CollectIDLEPoints(uint256, uint256);
+    event CollectTransactionPoints(uint256, uint256);
+    event BuyImprovement(uint256, uint256);
 
     struct IDLEConfiguration {
         uint8 projectPercentage;
@@ -33,7 +33,12 @@ contract TrainersIDLE is AccessControl {
     }
 
     struct ContractData {
+        bool trainerIsActive;
+        uint256 startBlock;
+        uint256 currentBlock;
         uint256 rewardsBalance;
+        uint256 availableIdlePoints;
+        uint256 availableTransactionPoints;
         EntityData userData;
         EntityData trainerData;
         IDLEConfiguration idleConfig;
@@ -76,7 +81,12 @@ contract TrainersIDLE is AccessControl {
     ) public view returns (ContractData memory) {
         return
             ContractData(
+                isActive(_trainer),
+                blockStartTracker_[_trainer],
+                block.number,
                 address(this).balance,
+                unlockedIdlePoints(_trainer),
+                transactionPoints(_trainer),
                 getUserData(_user),
                 getTrainerData(_trainer),
                 config_,
@@ -163,7 +173,7 @@ contract TrainersIDLE is AccessControl {
     // The function returns if a trainer is active on the game
     // It will be 0 when the user restarts the trainer on the new game every week
     function isActive(uint256 _trainer) public view returns (bool) {
-        return blockStartTracker_[_trainer] == 0;
+        return blockStartTracker_[_trainer] != 0;
     }
 
     // When the trainer was active in the block
@@ -183,8 +193,8 @@ contract TrainersIDLE is AccessControl {
         return config_.pPerBlock * idleBlocks(_t) * trainersData_[_t].mult;
     }
 
-    function transactionPoints(address _o) public view returns (uint256) {
-        return config_.pPerTrans * usersData_[_o].mult;
+    function transactionPoints(uint256 _t) public view returns (uint256) {
+        return config_.pPerTrans * trainersData_[_t].mult;
     }
 
     // It only works for the user improvements, the users will decide if they want to make trainers or users improvements
@@ -290,28 +300,25 @@ contract TrainersIDLE is AccessControl {
 
     function joinWithTrainer(uint256 _trainer) external payable {
         require(msg.value == config_.feeMTR, MTR_FEE_ERROR);
-        address _sender = _msgSender();
         require(!isActive(_trainer), ACTIVE_TRAINER_ERROR);
-        require(trainers_.ownerOf(_trainer) == _sender, OWNER_ERROR);
+        require(trainers_.ownerOf(_trainer) == _msgSender(), OWNER_ERROR);
         blockStartTracker_[_trainer] = block.number;
-        if (usersData_[_sender].mult == 0) usersData_[_sender].mult = 1;
-        emit Join(_sender, _trainer, block.timestamp);
+        if (trainersData_[_trainer].mult == 0) trainersData_[_trainer].mult = 1;
+        emit Join(_trainer, block.timestamp);
     }
 
     function collectIDLEPoints(uint256 _trainer) external payable {
         require(msg.value == config_.feeMTR, MTR_FEE_ERROR);
         require(isActive(_trainer), ACTIVE_TRAINER_ERROR);
-        address _owner = trainers_.ownerOf(_trainer);
-        usersData_[_owner].points += unlockedIdlePoints(_trainer);
+        trainersData_[_trainer].points += unlockedIdlePoints(_trainer);
         blockStartTracker_[_trainer] = block.number;
-        emit CollectIDLEPoints(_owner, _trainer, block.timestamp);
+        emit CollectIDLEPoints(_trainer, block.timestamp);
     }
 
     function collectTransPoints(uint256 _trainer) external payable {
         require(msg.value == config_.feeMTR, MTR_FEE_ERROR);
-        address _owner = trainers_.ownerOf(_trainer);
-        usersData_[_owner].points += transactionPoints(_owner);
-        emit CollectTransactionPoints(_owner, _trainer, block.timestamp);
+        trainersData_[_trainer].points += transactionPoints(_trainer);
+        emit CollectTransactionPoints(_trainer, block.timestamp);
     }
 
     // function buyImprovement(uint256 _i) external payable {
