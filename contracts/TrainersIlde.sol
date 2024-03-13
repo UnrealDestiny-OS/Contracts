@@ -39,12 +39,9 @@ contract TrainersIDLE is AccessControl {
         uint256 rewardsBalance;
         uint256 availableIdlePoints;
         uint256 availableTransactionPoints;
-        EntityData userData;
         EntityData trainerData;
         IDLEConfiguration idleConfig;
-        Improvement[] uImprovements;
         Improvement[] tImprovements;
-        bool[] userImprovements;
         bool[] trainerImprovements;
         uint8[] userRewardsPercentage;
         uint256[] userRewardsValues;
@@ -59,11 +56,8 @@ contract TrainersIDLE is AccessControl {
     string public constant CANT_GET_IT = "CANT_GET_IT";
 
     mapping(uint256 => uint256) private blockStartTracker_;
-    mapping(uint256 => Improvement) private pImprovements_;
     mapping(uint256 => Improvement) private tImprovements_;
-    mapping(address => EntityData) private usersData_;
     mapping(uint256 => EntityData) private trainersData_;
-    mapping(address => mapping(uint256 => bool)) private bUserImprovements_;
     mapping(uint256 => mapping(uint256 => bool)) private bTrainerImprovements_;
     mapping(uint256 => uint8) private rewardsP_;
 
@@ -74,8 +68,6 @@ contract TrainersIDLE is AccessControl {
     }
 
     function getContractData(
-        address _user,
-        uint256 _from,
         uint256 _to,
         uint256 _trainer
     ) public view returns (ContractData memory) {
@@ -87,13 +79,10 @@ contract TrainersIDLE is AccessControl {
                 address(this).balance,
                 unlockedIdlePoints(_trainer),
                 transactionPoints(_trainer),
-                getUserData(_user),
                 getTrainerData(_trainer),
                 config_,
-                getImprovements(_from, _to),
-                getTrainersImprovements(_from, _to),
-                getUserImprovements(_from, _to, _user),
-                getTrainerImprovements(_from, _to, _trainer),
+                getTrainersImprovements(_to),
+                getTrainerImprovements(_to, _trainer),
                 getUsersRewardsPercentages(config_.maxWinners),
                 getUserRewardsValues(config_.maxWinners)
             );
@@ -116,57 +105,26 @@ contract TrainersIDLE is AccessControl {
         return _r;
     }
 
-    function getUserData(
-        address _user
-    ) public view returns (EntityData memory) {
-        return usersData_[_user];
-    }
-
     function getTrainerData(
         uint256 _t
     ) public view returns (EntityData memory) {
         return trainersData_[_t];
     }
 
-    function getImprovements(
-        uint256 _from,
-        uint256 _to
-    ) public view returns (Improvement[] memory) {
-        uint256 _l = _to - _from;
-        Improvement[] memory _improvements = new Improvement[](_l);
-        for (uint256 i = 0; i < _l; i++) _improvements[i] = pImprovements_[i];
-        return _improvements;
-    }
-
     function getTrainersImprovements(
-        uint256 _from,
         uint256 _to
     ) public view returns (Improvement[] memory) {
-        uint256 _l = _to - _from;
-        Improvement[] memory _i = new Improvement[](_l);
-        for (uint256 i = 0; i < _l; i++) _i[i] = tImprovements_[i];
+        Improvement[] memory _i = new Improvement[](_to);
+        for (uint256 i = 0; i < _to; i++) _i[i] = tImprovements_[i];
         return _i;
     }
 
     function getTrainerImprovements(
-        uint256 _from,
         uint256 _to,
         uint256 _t
     ) public view returns (bool[] memory) {
-        uint256 _l = _to - _from;
-        bool[] memory _i = new bool[](_l);
-        for (uint256 i = 0; i < _l; i++) _i[i] = bTrainerImprovements_[_t][i];
-        return _i;
-    }
-
-    function getUserImprovements(
-        uint256 _from,
-        uint256 _to,
-        address _user
-    ) public view returns (bool[] memory) {
-        uint256 _l = _to - _from;
-        bool[] memory _i = new bool[](_l);
-        for (uint256 i = 0; i < _l; i++) _i[i] = bUserImprovements_[_user][i];
+        bool[] memory _i = new bool[](_to);
+        for (uint256 i = 0; i < _to; i++) _i[i] = bTrainerImprovements_[_t][i];
         return _i;
     }
 
@@ -197,14 +155,6 @@ contract TrainersIDLE is AccessControl {
         return config_.pPerTrans * trainersData_[_t].mult;
     }
 
-    // It only works for the user improvements, the users will decide if they want to make trainers or users improvements
-    function userHadImprovement(
-        address _o,
-        uint256 _i
-    ) public view returns (bool) {
-        return bUserImprovements_[_o][_i];
-    }
-
     // Validate if a traiuner already have an improvement
     function trainerHadImprovement(
         uint256 _t,
@@ -213,48 +163,20 @@ contract TrainersIDLE is AccessControl {
         return bTrainerImprovements_[_t][_i];
     }
 
-    // Validate if an user has enought points to buy user improvements
-    function hasEnoughtForUserI(
-        address _o,
-        uint256 _i
-    ) public view returns (bool) {
-        return usersData_[_o].points > pImprovements_[_i].value;
-    }
-
     // Validate if an user has enought points to buy trainer improvements
     function hasEnoughtForTrainerI(
-        address _o,
-        uint256 _i
-    ) public view returns (bool) {
-        return usersData_[_o].points > tImprovements_[_i].value;
-    }
-
-    // Validate all conditions to get an user improvement
-    function canGetItUserImprovement(
-        address _o,
-        uint256 _i
-    ) public view returns (bool) {
-        return !userHadImprovement(_o, _i) && hasEnoughtForUserI(_o, _i);
-    }
-
-    // Validate all conditions to get an trainer improvement
-    function canGetItUserImprovement(
-        address _o,
         uint256 _t,
         uint256 _i
     ) public view returns (bool) {
-        return !trainerHadImprovement(_t, _i) && hasEnoughtForTrainerI(_o, _i);
+        return trainersData_[_t].points > tImprovements_[_i].value;
     }
 
-    // Setters by the admin role
-    // Change the user improvement values (ADMIN_ROLE)
-    function setUserImprovementValue(
-        uint256 _i,
-        uint256 _value,
-        uint256 _mult
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        pImprovements_[_i].value = _value;
-        pImprovements_[_i].mult = _mult;
+    // Validate all conditions to get an trainer improvement
+    function canGetItTrainerImprovement(
+        uint256 _t,
+        uint256 _i
+    ) public view returns (bool) {
+        return !trainerHadImprovement(_t, _i) && hasEnoughtForTrainerI(_t, _i);
     }
 
     // Change the trainer improvement values (ADMIN_ROLE)
@@ -321,13 +243,12 @@ contract TrainersIDLE is AccessControl {
         emit CollectTransactionPoints(_trainer, block.timestamp);
     }
 
-    // function buyImprovement(uint256 _i) external payable {
-    //     require(msg.value == config_.feeMTR, MTR_FEE_ERROR);
-    //     address _owner = _msgSender();
-    //     require(canGetIt(_owner, _i), CANT_GET_IT);
-    //     boughtImprovements_[_owner][_i] = true;
-    //     usersData_[_owner].mult += pImprovements_[_i].mult;
-    //     usersData_[_owner].points -= pImprovements_[_i].value;
-    //     emit BuyImprovement(_owner, _i, block.timestamp);
-    // }
+    function buyTrainerImprovement(uint256 _t, uint256 _i) external payable {
+        require(msg.value == config_.feeMTR, MTR_FEE_ERROR);
+        require(canGetItTrainerImprovement(_t, _i), CANT_GET_IT);
+        bTrainerImprovements_[_t][_i] = true;
+        trainersData_[_t].mult += tImprovements_[_i].mult;
+        trainersData_[_t].points -= tImprovements_[_i].value;
+        emit BuyImprovement(_i, block.timestamp);
+    }
 }
