@@ -168,7 +168,7 @@ contract TrainersIDLE is AccessControl {
         uint256 _t,
         uint256 _i
     ) public view returns (bool) {
-        return trainersData_[_t].points > tImprovements_[_i].value;
+        return trainersData_[_t].points >= tImprovements_[_i].value;
     }
 
     // Validate all conditions to get an trainer improvement
