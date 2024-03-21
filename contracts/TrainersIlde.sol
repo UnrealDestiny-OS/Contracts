@@ -12,6 +12,7 @@ contract TrainersIDLE is AccessControl {
     event CollectIDLEPoints(uint256, uint256);
     event CollectTransactionPoints(uint256, uint256);
     event BuyImprovement(uint256, uint256);
+    event InjectFeeBalance(address, uint256, uint256);
 
     struct IDLEConfiguration {
         uint8 projectPercentage;
@@ -36,6 +37,8 @@ contract TrainersIDLE is AccessControl {
         bool trainerIsActive;
         uint256 startBlock;
         uint256 currentBlock;
+        uint256 userFeesBalance;
+        uint256 takedFees;
         uint256 rewardsBalance;
         uint256 availableIdlePoints;
         uint256 availableTransactionPoints;
@@ -61,10 +64,24 @@ contract TrainersIDLE is AccessControl {
     mapping(uint256 => mapping(uint256 => bool)) private bTrainerImprovements_;
     mapping(uint256 => uint8) private rewardsP_;
 
+    //Users accounts
+    mapping(address => uint256) private feeBalance_;
+
+    uint256 private gameRewards_;
+    uint256 private takedFees_;
+    address private executor_;
+
+    bytes32 public constant EXECUTOR = keccak256("EXECUTOR");
+
     constructor(address _trainersContract) {
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
         trainers_ = IERC721(_trainersContract);
         config_.startBlock = block.number;
+    }
+
+    function setExecutor(address _e) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        executor_ = _e;
+        _grantRole(EXECUTOR, executor_);
     }
 
     function getContractData(
@@ -76,7 +93,9 @@ contract TrainersIDLE is AccessControl {
                 isActive(_trainer),
                 blockStartTracker_[_trainer],
                 block.number,
-                address(this).balance,
+                feeBalance_[trainers_.ownerOf(_trainer)],
+                takedFees_,
+                gameRewards_,
                 unlockedIdlePoints(_trainer),
                 transactionPoints(_trainer),
                 getTrainerData(_trainer),
@@ -86,6 +105,14 @@ contract TrainersIDLE is AccessControl {
                 getUsersRewardsPercentages(config_.maxWinners),
                 getUserRewardsValues(config_.maxWinners)
             );
+    }
+
+    function getUserFeesBalance(address _e) external view returns (uint256) {
+        return feeBalance_[_e];
+    }
+
+    function getTakedFees() external view returns (uint256) {
+        return takedFees_;
     }
 
     function getUsersRewardsPercentages(
@@ -220,8 +247,11 @@ contract TrainersIDLE is AccessControl {
     // Executions
     // All the users function to join, buy or interact with the game
 
-    function joinWithTrainer(uint256 _trainer) external payable {
-        require(msg.value == config_.feeMTR, MTR_FEE_ERROR);
+    function joinWithTrainer(
+        address _e,
+        uint256 _trainer
+    ) external onlyRole(EXECUTOR) {
+        takeFees(_e);
         require(!isActive(_trainer), ACTIVE_TRAINER_ERROR);
         require(trainers_.ownerOf(_trainer) == _msgSender(), OWNER_ERROR);
         blockStartTracker_[_trainer] = block.number;
@@ -229,26 +259,63 @@ contract TrainersIDLE is AccessControl {
         emit Join(_trainer, block.timestamp);
     }
 
-    function collectIDLEPoints(uint256 _trainer) external payable {
-        require(msg.value == config_.feeMTR, MTR_FEE_ERROR);
+    function collectIDLEPoints(
+        address _e,
+        uint256 _trainer
+    ) external onlyRole(EXECUTOR) {
+        takeFees(_e);
         require(isActive(_trainer), ACTIVE_TRAINER_ERROR);
         trainersData_[_trainer].points += unlockedIdlePoints(_trainer);
         blockStartTracker_[_trainer] = block.number;
         emit CollectIDLEPoints(_trainer, block.timestamp);
     }
 
-    function collectTransPoints(uint256 _trainer) external payable {
-        require(msg.value == config_.feeMTR, MTR_FEE_ERROR);
+    function collectTransPoints(
+        address _e,
+        uint256 _trainer
+    ) external onlyRole(EXECUTOR) {
+        takeFees(_e);
         trainersData_[_trainer].points += transactionPoints(_trainer);
         emit CollectTransactionPoints(_trainer, block.timestamp);
     }
 
-    function buyTrainerImprovement(uint256 _t, uint256 _i) external payable {
-        require(msg.value == config_.feeMTR, MTR_FEE_ERROR);
+    function buyTrainerImprovement(
+        address _e,
+        uint256 _t,
+        uint256 _i
+    ) external onlyRole(EXECUTOR) {
+        takeFees(_e);
         require(canGetItTrainerImprovement(_t, _i), CANT_GET_IT);
         bTrainerImprovements_[_t][_i] = true;
         trainersData_[_t].mult += tImprovements_[_i].mult;
         trainersData_[_t].points -= tImprovements_[_i].value;
         emit BuyImprovement(_i, block.timestamp);
+    }
+
+    // Accounts managers
+
+    function injectBalance() external payable {
+        require(msg.value >= config_.feeMTR, MTR_FEE_ERROR);
+        address _sender = _msgSender();
+        uint256 _agregatedValue = msg.value - config_.feeMTR;
+        takedFees_ += config_.feeMTR;
+        feeBalance_[_sender] += _agregatedValue;
+        emit InjectFeeBalance(_sender, _agregatedValue, block.timestamp);
+    }
+
+    function takeFees(address _e) private {
+        uint256 _totalFee = config_.feeMTR;
+        require(feeBalance_[_e] >= _totalFee, MTR_FEE_ERROR);
+        uint256 _projectFee = (config_.projectPercentage * _totalFee) / 100;
+        uint256 _fee = _totalFee - _projectFee;
+        feeBalance_[_e] -= _totalFee;
+        takedFees_ += _projectFee;
+        gameRewards_ += _fee;
+    }
+
+    function sendFeesToExecutor() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        (bool sent, ) = executor_.call{value: takedFees_}("");
+        require(sent, MTR_FEE_ERROR);
+        takedFees_ = 0;
     }
 }
