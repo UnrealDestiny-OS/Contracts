@@ -23,7 +23,6 @@ contract TrainersDeployer is AccessControl, ITrainersDeployer {
     address public staking_ = address(0);
     address public project_ = address(0);
     address public rewards_ = address(0);
-    address public feeWallet_ = address(0);
 
     ITrainersERC721 public trainers_;
     IERC20 public token_;

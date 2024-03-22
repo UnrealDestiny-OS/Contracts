@@ -19,7 +19,7 @@ async function main() {
     UDToken: { address: token.target.toString(), abiPath: "Token.sol/UDToken.json" },
     TrainersERC721: { address: trainersNFTs.target.toString(), abiPath: "TrainersERC721.sol/TrainersERC721.json" },
     TrainersDeployer: { address: trainersDeployer.target.toString(), abiPath: "TrainersDeployer.sol/TrainersDeployer.json" },
-    TrainersIDLE: { address: trainersIdle.target.toString(), abiPath: "TrainersIlde.sol/TrainersIDLE.json" },
+    TrainersIDLE: { address: trainersIdle.target.toString(), abiPath: "TrainersIdle.sol/TrainersIDLE.json" },
   });
 }
 

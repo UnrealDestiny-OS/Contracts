@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.18+commit.87f61d96"
+		"version": "0.8.19+commit.7dd6d404"
 	},
 	"language": "Solidity",
 	"output": {
@@ -198,19 +198,6 @@
 			},
 			{
 				"inputs": [],
-				"name": "ADMIN",
-				"outputs": [
-					{
-						"internalType": "bytes32",
-						"name": "",
-						"type": "bytes32"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
 				"name": "DEFAULT_ADMIN_ROLE",
 				"outputs": [
 					{
@@ -224,7 +211,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "DEP",
+				"name": "DEPLOYER",
 				"outputs": [
 					{
 						"internalType": "bytes32",
@@ -280,6 +267,25 @@
 						"internalType": "uint256",
 						"name": "",
 						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_id",
+						"type": "uint256"
+					}
+				],
+				"name": "encodedData",
+				"outputs": [
+					{
+						"internalType": "bytes",
+						"name": "",
+						"type": "bytes"
 					}
 				],
 				"stateMutability": "view",
@@ -405,6 +411,25 @@
 				"name": "mint",
 				"outputs": [],
 				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_id",
+						"type": "uint256"
+					}
+				],
+				"name": "model",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -611,25 +636,6 @@
 			{
 				"inputs": [
 					{
-						"internalType": "uint256",
-						"name": "_id",
-						"type": "uint256"
-					}
-				],
-				"name": "tokenModel",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
 						"internalType": "address",
 						"name": "owner",
 						"type": "address"
@@ -819,7 +825,7 @@
 			"bytecodeHash": "ipfs"
 		},
 		"optimizer": {
-			"enabled": true,
+			"enabled": false,
 			"runs": 200
 		},
 		"remappings": []
@@ -946,11 +952,11 @@
 			]
 		},
 		"contracts/TrainersERC721.sol": {
-			"keccak256": "0x8c05b20f4f3cbdbdefac39a73024ea715ac3309701c3625b15fab247fee83503",
+			"keccak256": "0xafd850454dc90061ae95360d33e84e3fb2f2ffbd83184bdbda1459fb1edcb1ff",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://6db25cc0ec6f1601e4050bae7fd046d2d20b123a4da09590320aba60c7488e0a",
-				"dweb:/ipfs/Qmdi8tjYP2RBsZwG6Nw9cfgmWKe3HYvwNY5qLq2yTMtmFP"
+				"bzz-raw://184cb16af4f146ea0f01e239e8487230009f443cd8921461bd8f09bebb7e6f24",
+				"dweb:/ipfs/QmRFnPdP1HKwz9JRwHcsTLPg7VgyBB9hm6FFbPcEHj3vc3"
 			]
 		}
 	},
